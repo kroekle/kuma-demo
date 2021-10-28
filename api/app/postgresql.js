@@ -14,10 +14,16 @@ pool.on("error", (err, clients) => {
   process.exit(-1);
 });
 
-const search = async (itemName) => {
-  return await pool.query(
-    `SELECT data FROM marketItems WHERE name ILIKE '%${itemName}%'`
-  );
+const search = async (itemName, headers) => {
+  if (headers["x-company-limit"]) {
+
+    var sql = `SELECT data FROM marketItems WHERE name ILIKE '%${itemName}%' and data->>'company' in (${headers["x-company-limit"].split("|").map(c => `'${c}'`)})`
+    return await pool.query(sql);
+  } else {
+    return await pool.query(
+      `SELECT data FROM marketItems WHERE name ILIKE '%${itemName}%'`
+      );
+  }
 };
 
 const importData = () => {

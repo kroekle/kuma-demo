@@ -40,7 +40,7 @@ app.post("/upload", async (req, res) => {
 
 app.get("/items", async (req, res) => {
   postgresql
-    .search(req.query.q)
+    .search(req.query.q, req.headers)
     .then(async (results) => {
       if (specialOffers == true) {
         res.send(addOffer(results.rows));

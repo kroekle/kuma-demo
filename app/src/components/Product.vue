@@ -100,10 +100,20 @@
               </code>
             </template>
           </error>
+          <error v-if="deniedApiError">
+            <template v-slot:header>
+              <p>You are Denied:</p>
+            </template>
+            <template v-slot:body>
+              <code>
+                <pre>{{ deniedApiError }}</pre>
+              </code>
+            </template>
+          </error>
           <div v-if="isModalDataLoaded">
             <reviews :items="reviews" />
           </div>
-          <div v-else class="loading-reviews flex items-center justify-center text-pink mt-8 mb-8">
+          <div v-else-if="!modalApiError && !deniedApiError" class="loading-reviews flex items-center justify-center text-pink mt-8 mb-8">
             <fa-icon :icon="['fas', 'circle-notch']" size="3x" spin />
           </div>
         </template>
@@ -129,6 +139,7 @@ export default {
       reviews: Array,
       isModalVisible: false,
       modalApiError: null,
+      deniedApiError: null, 
       isModalDataLoaded: false
     };
   },
@@ -189,16 +200,21 @@ export default {
           if (errorCheck && errorCheck.length) {
             this.modalApiError = errorCheck;
           } else {
-            this.reviews = await response.data;
+            this.deniedApiError = null
             this.modalApiError = null;
+            this.reviews = await response.data;
           }
 
           // trigger the modal
           this.isModalDataLoaded = await true;
         })
         .catch(error => {
-          this.modalApiError = error;
-          console.error("Reviews Redis API Error:", error);
+          if (error.response.status == 403) {
+            this.deniedApiError = error.response.headers["message"] || " ";
+          } else {
+            this.modalApiError = error;
+            console.error("Reviews Redis API Error:", error);
+          }
         });
     }
   }
